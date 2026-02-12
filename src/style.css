@@ -1,0 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background: linear-gradient(180deg, #e8c956 0%, #e5c44d 50%, #e2bf45 100%);
+    min-height: 100%;
+  }
+  body {
+    background: transparent;
+    min-height: 100vh;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+/* Responzivita – safe area (výřezy, notche) */
+.safe-area-padding {
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Sekce – střídavé pozadí pro živější dojem */
+.section-default {
+  background: linear-gradient(180deg, rgba(232, 201, 86, 0.15) 0%, transparent 100%);
+}
+.section-alt {
+  background: linear-gradient(180deg, transparent 0%, rgba(9, 39, 39, 0.04) 50%, transparent 100%);
+}
+.section-stats {
+  background: transparent;
+}
+
+/* Karty sekcí – jemný lift při hover */
+.section-card {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+@media (hover: hover) {
+  .section-card:hover {
+    box-shadow: 0 20px 40px -15px rgba(9, 39, 39, 0.12);
+  }
+}
+
+/* Stats blok – živější */
+.stats-card {
+  background: linear-gradient(135deg, #092727 0%, #0d3535 50%, #092727 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Tlačítka „Staň se slonem!” – stejné pozadí jako blok Tým/Tréninky/Zápasy/Komunita */
+.btn-elephant {
+  background: linear-gradient(135deg, #092727 0%, #0d3535 50%, #092727 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.btn-elephant:hover {
+  background: linear-gradient(135deg, #0d3535 0%, #114040 50%, #0d3535 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Tlačítka – aktivní stav */
+.btn-primary:active,
+.btn-cta:active,
+.btn-submit:active {
+  transform: scale(0.98);
+}
+
+/* Partner loga – hover */
+.partner-link {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.partner-link:hover {
+  opacity: 0.9;
+}
+@media (hover: hover) {
+  .partner-link:hover {
+    transform: scale(1.05);
+  }
+}
+
+/* Stat pill (Tréninky / Zápasy) */
+.stat-pill {
+  padding: 0.5rem 0;
+}
+
+/* Odkaz „Všechny příspěvky“ */
+.link-arrow:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Formulář – větší touch plocha na mobilu */
+.input-touch {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Loader – fullscreen overlay, skrytí po window.load (min. 500–800 ms v main.js) */
+#page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--loader-bg, #e8c956);
+  transition: opacity 0.3s ease;
+}
+/* Header – stejná žlutá jako pozadí stránky */
+.site-header {
+  background-color: rgba(232, 201, 86, 0.95);
+}
+
+#page-loader.loader-fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+/* Loader – helma: lehký odraz + jemné pulzování */
+.loader-football-wrap {
+  animation: loader-bounce 0.8s ease-in-out infinite;
+}
+.loader-football {
+  animation: loader-pulse 1.2s ease-in-out infinite;
+}
+@keyframes loader-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.05); }
+}
+@keyframes loader-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Barvy doplní klient (tailwind.config.js / CSS variables) */
+.gradient-mesh {
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(9, 39, 39, 0.06), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(237, 209, 79, 0.08), transparent);
+}
+
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+@media (hover: hover) {
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px -12px rgba(9, 39, 39, 0.18);
+    border-color: rgba(9, 39, 39, 0.12);
+  }
+}
+
+.hero-bg-animation {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-grid {
+  position: absolute;
+  inset: -50%;
+  background-size: 60px 60px;
+  background-image: linear-gradient(var(--hero-grid, rgba(9, 39, 39, 0.04)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hero-grid, rgba(9, 39, 39, 0.04)) 1px, transparent 1px);
+  animation: grid-drift 25s linear infinite;
+}
+.hero-grid:nth-child(2) {
+  animation-duration: 35s;
+  animation-direction: reverse;
+  background-position: 30px 30px;
+}
+@keyframes grid-drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(60px, 60px); }
+}
+
+.hero-dots .hero-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--hero-dot, rgba(9, 39, 39, 0.15));
+  animation: dot-float 20s ease-in-out infinite;
+}
+@keyframes dot-float {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  25% { transform: translate(20px, -30px) scale(1.2); opacity: 1; }
+  50% { transform: translate(-15px, 20px) scale(0.9); opacity: 0.7; }
+  75% { transform: translate(25px, 15px) scale(1.1); opacity: 0.9; }
+}

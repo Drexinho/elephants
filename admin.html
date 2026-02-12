@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin – Blog | Kroměříž Elephants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <script src="/src/main.js" type="module"></script>
+</head>
+<body class="font-sans antialiased text-primary-900 min-h-screen">
+  <div id="page-loader" class="loader" role="status" aria-live="polite" aria-label="Načítání stránky">
+    <div class="loader-football-wrap">
+      <img src="/images/loader.png" alt="" class="loader-football w-[400px] h-[400px] object-contain" width="400" height="400" />
+    </div>
+    <p class="mt-4 text-sm text-primary-600">Načítám…</p>
+  </div>
+
+  <header class="site-header fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-primary-800/20">
+    <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between h-16 md:h-20">
+      <a href="index.html" class="text-xl font-bold tracking-tight text-primary-900">Kroměříž Elephants<span class="text-primary-700">.</span> Admin</a>
+      <div class="flex items-center gap-4">
+        <span id="admin-user" class="text-primary-600 text-sm hidden">admin</span>
+        <button type="button" id="logout-btn" class="hidden text-primary-700 hover:text-primary-900 text-sm transition">Odhlásit</button>
+        <a href="blog.html" class="text-primary-700 hover:text-primary-900 text-sm transition">Zobrazit blog</a>
+        <a href="index.html" class="text-primary-700 hover:text-primary-900 text-sm transition">Na web</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Přihlášení -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center pt-20 px-6">
+    <div class="w-full max-w-sm rounded-3xl bg-white shadow-xl shadow-primary-900/10 border border-primary-100 p-8">
+      <h2 class="text-xl font-bold text-primary-900 mb-6">Přihlášení do administrace</h2>
+      <form id="login-form" class="space-y-5">
+        <p id="login-error" class="text-red-600 text-sm hidden">Nesprávné přihlašovací údaje.</p>
+        <div>
+          <label for="login-user" class="block text-sm font-medium text-primary-700 mb-2">Přihlašovací jméno</label>
+          <input type="text" id="login-user" name="user" required autocomplete="username" class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="admin" />
+        </div>
+        <div>
+          <label for="login-password" class="block text-sm font-medium text-primary-700 mb-2">Heslo</label>
+          <input type="password" id="login-password" name="password" required autocomplete="current-password" class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="••••••••" />
+        </div>
+        <button type="submit" class="w-full py-3 bg-primary-700 hover:bg-primary-800 text-white font-semibold rounded-xl transition">
+          Přihlásit
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Obsah po přihlášení -->
+  <main id="admin-content" class="pt-28 pb-16 md:pb-20 hidden">
+    <section class="py-8 md:py-12">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-3xl shadow-xl shadow-primary-900/10 p-8 md:p-14">
+          <div class="max-w-4xl mx-auto">
+      <h1 class="text-3xl font-bold text-primary-900 mb-2">Správa blogu</h1>
+      <p class="text-primary-600 mb-10">Přidávejte a upravujte příspěvky. Data se ukládají na server (soubor <code class="bg-primary-100 px-1 rounded">data/posts.json</code>).</p>
+
+      <div class="rounded-2xl bg-primary-50/80 border border-primary-100 p-6 md:p-8 mb-12">
+        <h2 id="form-title" class="text-xl font-bold text-primary-900 mb-6">Nový příspěvek</h2>
+        <form id="post-form" class="space-y-5">
+          <input type="hidden" id="post-id" />
+          <div>
+            <label for="title" class="block text-sm font-medium text-primary-700 mb-2">Název *</label>
+            <input type="text" id="title" name="title" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Název článku" />
+          </div>
+          <div>
+            <label for="date" class="block text-sm font-medium text-primary-700 mb-2">Datum *</label>
+            <input type="date" id="date" name="date" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          </div>
+          <div>
+            <label for="excerpt" class="block text-sm font-medium text-primary-700 mb-2">Krátký popis (perex) *</label>
+            <input type="text" id="excerpt" name="excerpt" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Jedna věta pro náhled v seznamu" />
+          </div>
+          <div>
+            <label for="body" class="block text-sm font-medium text-primary-700 mb-2">Text článku *</label>
+            <textarea id="body" name="body" rows="6" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y" placeholder="Plný text příspěvku..."></textarea>
+          </div>
+          <div>
+            <label for="image" class="block text-sm font-medium text-primary-700 mb-2">Obrázek k článku</label>
+            <div class="flex flex-wrap gap-3 items-start">
+              <input type="text" id="image" name="image" class="flex-1 min-w-[200px] px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="URL nebo nahrajte soubor (zobrazí se jen u plného článku)" />
+              <div class="flex items-center gap-2">
+                <input type="file" id="image-upload" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" />
+                <button type="button" id="image-upload-btn" class="px-4 py-3 bg-primary-100 hover:bg-primary-200 text-primary-800 font-medium rounded-xl transition border border-primary-200">
+                  Nahrát obrázek
+                </button>
+                <span id="image-upload-status" class="text-sm text-primary-500 hidden"></span>
+              </div>
+            </div>
+            <p class="mt-1.5 text-xs text-primary-500">Obrázek se uloží do složky <code class="bg-primary-100 px-1 rounded">public/images</code>. Funguje při běhu dev serveru (<code class="bg-primary-100 px-1 rounded">npm run dev</code>).</p>
+          </div>
+          <div class="flex gap-3">
+            <button type="submit" class="px-6 py-3 bg-primary-700 hover:bg-primary-800 text-white font-semibold rounded-xl transition">
+              Uložit
+            </button>
+            <button type="button" id="cancel-edit" class="hidden px-6 py-3 bg-primary-200 hover:bg-primary-300 text-primary-800 font-semibold rounded-xl transition">
+              Zrušit úpravu
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <h2 class="text-xl font-bold text-primary-900 mb-4">Příspěvky</h2>
+      <div id="posts-list" class="space-y-4">
+        <!-- Naplní JS -->
+      </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-primary-900 text-primary-200 py-6 md:py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="text-center md:text-left">
+          <p class="font-bold text-white text-sm">Kroměříž Elephants</p>
+          <p class="text-primary-300 font-medium text-xs mt-0.5">Síla, Respekt, Vítězství</p>
+          <p class="text-primary-400 text-xs mt-0.5">Klub amerického fotbalu</p>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <a href="blog.html" class="text-primary-200 hover:text-white text-xs transition">Blog</a>
+          <a href="index.html" class="text-primary-200 hover:text-white text-xs transition">Na web</a>
+        </div>
+        <p class="text-primary-400 text-xs">© 2025 Kroměříž Elephants. Všechna práva vyhrazena.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    const ADMIN_STORAGE_KEY = 'elephants_admin'
+    const ADMIN_USERNAME_KEY = 'elephants_admin_user'
+    const ADMIN_USERS = {
+      admin: 'KromerizElephants2025',
+      editor: 'KromerizElephants2025',
+    }
+
+    const loginScreen = document.getElementById('login-screen')
+    const adminContent = document.getElementById('admin-content')
+    const loginForm = document.getElementById('login-form')
+    const loginError = document.getElementById('login-error')
+    const logoutBtn = document.getElementById('logout-btn')
+    const adminUserSpan = document.getElementById('admin-user')
+
+    function showAdmin() {
+      loginScreen.classList.add('hidden')
+      adminContent.classList.remove('hidden')
+      logoutBtn.classList.remove('hidden')
+      adminUserSpan.textContent = sessionStorage.getItem(ADMIN_USERNAME_KEY) || 'admin'
+      adminUserSpan.classList.remove('hidden')
+    }
+
+    function showLogin() {
+      loginScreen.classList.remove('hidden')
+      adminContent.classList.add('hidden')
+      logoutBtn.classList.add('hidden')
+      adminUserSpan.classList.add('hidden')
+      loginError.classList.add('hidden')
+    }
+
+    async function initAdminPosts() {
+      await loadPostsFromServer()
+      if (typeof renderPosts === 'function') renderPosts()
+    }
+
+    if (sessionStorage.getItem(ADMIN_STORAGE_KEY) === '1') {
+      showAdmin()
+      initAdminPosts()
+    } else {
+      showLogin()
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const user = document.getElementById('login-user').value.trim()
+      const password = document.getElementById('login-password').value
+      if (ADMIN_USERS[user] === password) {
+        sessionStorage.setItem(ADMIN_STORAGE_KEY, '1')
+        sessionStorage.setItem(ADMIN_USERNAME_KEY, user)
+        loginError.classList.add('hidden')
+        showAdmin()
+        await initAdminPosts()
+      } else {
+        loginError.classList.remove('hidden')
+      }
+    })
+
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem(ADMIN_STORAGE_KEY)
+      sessionStorage.removeItem(ADMIN_USERNAME_KEY)
+      showLogin()
+    })
+
+    import {
+      getPosts,
+      getPostById,
+      createPost,
+      updatePost,
+      deletePost,
+      loadPostsFromServer,
+      savePostsToServer,
+    } from '/src/data/posts.js'
+
+    const form = document.getElementById('post-form')
+    const formTitleEl = document.getElementById('form-title')
+    const postIdInput = document.getElementById('post-id')
+    const titleInput = document.getElementById('title')
+    const dateInput = document.getElementById('date')
+    const excerptInput = document.getElementById('excerpt')
+    const bodyInput = document.getElementById('body')
+    const imageInput = document.getElementById('image')
+    const cancelBtn = document.getElementById('cancel-edit')
+    const postsList = document.getElementById('posts-list')
+
+    if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10)
+
+    const imageUploadInput = document.getElementById('image-upload')
+    const imageUploadBtn = document.getElementById('image-upload-btn')
+    const imageUploadStatus = document.getElementById('image-upload-status')
+
+    imageUploadBtn.addEventListener('click', () => imageUploadInput.click())
+    imageUploadInput.addEventListener('change', async () => {
+      const file = imageUploadInput.files?.[0]
+      if (!file) return
+      imageUploadStatus.textContent = 'Nahrávám…'
+      imageUploadStatus.classList.remove('hidden')
+      imageUploadBtn.disabled = true
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+        const data = await res.json()
+        if (!res.ok) {
+          imageUploadStatus.textContent = data.error || 'Chyba'
+          return
+        }
+        imageInput.value = data.url
+        imageUploadStatus.textContent = 'Nahráno'
+        imageUploadInput.value = ''
+      } catch (_) {
+        imageUploadStatus.textContent = 'Chyba připojení (spusťte npm run dev)'
+      } finally {
+        imageUploadBtn.disabled = false
+        setTimeout(() => imageUploadStatus.classList.add('hidden'), 3000)
+      }
+    })
+
+    function renderPosts() {
+      const posts = getPosts().sort((a, b) => new Date(b.date) - new Date(a.date))
+      postsList.innerHTML = posts.map(p => `
+        <div class="flex items-center justify-between gap-4 rounded-xl border border-primary-200 bg-white p-4 shadow-sm">
+          <div class="min-w-0">
+            <p class="font-semibold text-primary-900 truncate">${escapeHtml(p.title)}</p>
+            <p class="text-sm text-primary-500">${new Date(p.date).toLocaleDateString('cs-CZ')}</p>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <button type="button" class="edit-post px-4 py-2 text-sm bg-primary-100 hover:bg-primary-200 text-primary-800 rounded-lg transition" data-id="${p.id}">Upravit</button>
+            <button type="button" class="delete-post px-4 py-2 text-sm bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition" data-id="${p.id}">Smazat</button>
+          </div>
+        </div>
+      `).join('')
+
+      postsList.querySelectorAll('.edit-post').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const post = getPostById(btn.dataset.id)
+          if (!post) return
+          formTitleEl.textContent = 'Upravit příspěvek'
+          postIdInput.value = post.id
+          titleInput.value = post.title
+          dateInput.value = post.date
+          excerptInput.value = post.excerpt
+          bodyInput.value = post.body
+          imageInput.value = post.image || ''
+          cancelBtn.classList.remove('hidden')
+        })
+      })
+
+      postsList.querySelectorAll('.delete-post').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Opravdu smazat tento příspěvek?')) return
+          const next = deletePost(getPosts(), btn.dataset.id)
+          const result = await savePostsToServer(next)
+          if (result.ok) {
+            renderPosts()
+            if (postIdInput.value === btn.dataset.id) resetForm()
+          } else {
+            alert(result.error || 'Uložení se nezdařilo.')
+          }
+        })
+      })
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div')
+      div.textContent = s
+      return div.innerHTML
+    }
+
+    function resetForm() {
+      formTitleEl.textContent = 'Nový příspěvek'
+      postIdInput.value = ''
+      form.reset()
+      dateInput.value = new Date().toISOString().slice(0, 10)
+      cancelBtn.classList.add('hidden')
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const id = postIdInput.value
+      const title = titleInput.value.trim()
+      const date = dateInput.value
+      const excerpt = excerptInput.value.trim()
+      const body = bodyInput.value.trim()
+      const image = imageInput.value.trim()
+      if (!title || !date || !excerpt || !body) return
+
+      let posts = getPosts()
+      if (id) {
+        posts = updatePost(posts, id, { title, date, excerpt, body, image })
+      } else {
+        posts = [createPost({ title, date, excerpt, body, image }), ...posts]
+      }
+      const result = await savePostsToServer(posts)
+      if (result.ok) {
+        renderPosts()
+        resetForm()
+      } else {
+        alert(result.error || 'Uložení se nezdařilo.')
+      }
+    })
+
+    cancelBtn.addEventListener('click', resetForm)
+
+    if (adminContent.classList.contains('hidden') === false) {
+      initAdminPosts()
+    }
+  </script>
+</body>
+</html>
