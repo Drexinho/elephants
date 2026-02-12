@@ -105,6 +105,7 @@ export default defineConfig({
     port: 5175,
   },
   build: {
+    target: 'esnext',
     rollupOptions: {
       input: ['index.html', 'blog.html', 'admin.html'],
     },

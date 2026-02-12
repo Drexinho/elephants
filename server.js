@@ -14,8 +14,42 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import http from 'node:http'
 
+/** Slouží soubor s podporou Range (206) – nutné pro přehrávání videa na mobilu */
+function serveFileWithRange(req, res, filePath, contentType) {
+  fs.stat(filePath, (err, stat) => {
+    if (err || !stat.isFile()) {
+      res.writeHead(404)
+      res.end()
+      return
+    }
+    const size = stat.size
+    const range = req.headers.range
+    if (range) {
+      const match = range.match(/^bytes=(\d*)-(\d*)$/)
+      if (match) {
+        const start = match[1] === '' ? 0 : parseInt(match[1], 10)
+        const end = match[2] === '' ? size - 1 : parseInt(match[2], 10)
+        const len = end - start + 1
+        const stream = fs.createReadStream(filePath, { start, end })
+        res.writeHead(206, {
+          'Content-Type': contentType,
+          'Content-Range': `bytes ${start}-${end}/${size}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': len,
+        })
+        stream.pipe(res)
+        return
+      }
+    }
+    res.setHeader('Accept-Ranges', 'bytes')
+    res.writeHead(200, { 'Content-Type': contentType, 'Content-Length': size })
+    fs.createReadStream(filePath).pipe(res)
+  })
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIST_DIR = path.join(__dirname, 'dist')
+const PUBLIC_VIDEOS_DIR = path.join(__dirname, 'public', 'videos')
 const POSTS_FILE = path.join(__dirname, 'data', 'posts.json')
 const IMAGES_DIR = path.join(__dirname, 'dist', 'images')
 const PORT = Number(process.env.PORT) || 5175
@@ -84,6 +118,21 @@ const server = http.createServer(async (req, res) => {
     } catch (_) {
       sendJson(res, 400, { error: 'Neplatná data.' })
     }
+    return
+  }
+
+  // Úvodní / hero videa z public/videos (s Range pro mobil)
+  if (pathname.startsWith('/videos/')) {
+    let subPath = pathname.slice('/videos/'.length).replace(/\.\./g, '')
+    try { subPath = decodeURIComponent(subPath) } catch (_) {}
+    const filePath = path.join(PUBLIC_VIDEOS_DIR, subPath)
+    if (!filePath.startsWith(PUBLIC_VIDEOS_DIR) || !subPath) {
+      res.writeHead(403)
+      res.end()
+      return
+    }
+    const contentType = MIME[path.extname(filePath)] || 'application/octet-stream'
+    serveFileWithRange(req, res, filePath, contentType)
     return
   }
 
