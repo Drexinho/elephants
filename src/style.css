@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,12 +7,49 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    background: linear-gradient(180deg, #e8c956 0%, #e5c44d 50%, #e2bf45 100%);
     min-height: 100%;
+    /* Sloní kůže: fotka na 50 % opacity (viz OBRAZKY-README) */
+    background-color: #0a0e0c;
+    background-image:
+      /* Fallback: jemné vrásky */
+      repeating-linear-gradient(105deg, transparent 0, transparent 2px, rgba(18, 24, 21, 0.25) 2px, rgba(18, 24, 21, 0.25) 3px),
+      repeating-linear-gradient(75deg, transparent 0, transparent 4px, rgba(12, 17, 15, 0.3) 4px, rgba(12, 17, 15, 0.3) 5px),
+      radial-gradient(ellipse 120% 80% at 20% 30%, rgba(22, 28, 25, 0.9) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 70% at 80% 70%, rgba(18, 24, 21, 0.85) 0%, transparent 45%),
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(25, 32, 28, 0.6) 0%, transparent 40%),
+      linear-gradient(165deg, #060a08 0%, #080c0a 25%, #0a0e0c 50%, #070b09 75%, #060a08 100%);
+    background-size: auto, auto, auto, auto, auto;
+    background-attachment: scroll, scroll, scroll, scroll, scroll;
+  }
+  /* Fotka sloní kůže – 50 % opacity (public/images/elephant-skin-bg.png) */
+  html::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image: url("/images/elephant-skin-bg.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  /* Jemný zrnitý šum přes pozadí */
+  html::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.2;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='skin'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23skin)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
   }
   body {
     background: transparent;
     min-height: 100vh;
+    position: relative;
+    z-index: 1;
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -28,41 +65,77 @@
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-/* Sekce – střídavé pozadí pro živější dojem */
-.section-default {
-  background: linear-gradient(180deg, rgba(232, 201, 86, 0.15) 0%, transparent 100%);
-}
-.section-alt {
-  background: linear-gradient(180deg, transparent 0%, rgba(9, 39, 39, 0.04) 50%, transparent 100%);
-}
+/* Sekce – všechna stejně průhledná, aby pozadí html plynule navazovalo od úvodu po footer */
+.section-default,
+.section-alt,
 .section-stats {
   background: transparent;
 }
+.section-heading-accent {
+  display: inline-block;
+  width: 3rem;
+  height: 4px;
+  background: linear-gradient(90deg, #f5c000, #ffd233);
+  margin-bottom: 0.75rem;
+  border-radius: 2px;
+}
 
-/* Karty sekcí – jemný lift při hover */
+/* Karty sekcí – tmavé na pozadí sloní kůže, žlutý okraj */
 .section-card {
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  background: linear-gradient(145deg, rgba(10, 22, 22, 0.92) 0%, rgba(15, 28, 28, 0.88) 50%, rgba(10, 22, 22, 0.92) 100%) !important;
+  border: 2px solid rgba(245, 196, 0, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.45);
+  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
 }
 @media (hover: hover) {
   .section-card:hover {
-    box-shadow: 0 20px 40px -15px rgba(9, 39, 39, 0.12);
+    box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(245, 196, 0, 0.2);
+    border-color: rgba(245, 196, 0, 0.6);
   }
 }
+/* Text a odkazy uvnitř karet – světlé na tmavém */
+.section-card .text-primary-900,
+.section-card h1, .section-card h2, .section-card h3 { color: #fff !important; }
+.section-card .text-primary-600,
+.section-card .text-primary-500,
+.section-card p { color: rgba(255, 255, 255, 0.85) !important; }
+.section-card .text-primary-800 { color: rgba(255, 255, 255, 0.95) !important; }
+.section-card .text-primary-700 { color: rgba(255, 255, 255, 0.9) !important; }
+.section-card a:not(.btn-elephant):not(.partner-link) { color: #f5c000 !important; }
+.section-card a:not(.btn-elephant):not(.partner-link):hover { color: #ffd233 !important; }
+.section-card .link-arrow:hover { color: #ffd233 !important; }
+/* Obrázky a rámečky uvnitř karet */
+.section-card figure,
+.section-card .border-primary-200 { border-color: rgba(255, 255, 255, 0.15) !important; }
+.section-card .bg-primary-100 { background: rgba(0, 0, 0, 0.25) !important; }
+/* Formulář v kartě – tmavý blok, světlé popisky, bílá pole */
+.section-card .bg-primary-50\/80,
+.section-card [class*="bg-primary-50"] { background: rgba(0, 0, 0, 0.3) !important; border-color: rgba(255, 255, 255, 0.12) !important; }
+.section-card label { color: rgba(255, 255, 255, 0.95) !important; }
+.section-card input,
+.section-card textarea { background: rgba(255, 255, 255, 0.95) !important; color: #0a1616 !important; border-color: rgba(255, 255, 255, 0.35) !important; }
+.section-card input::placeholder,
+.section-card textarea::placeholder { color: #6b6358; }
 
-/* Stats blok – živější */
+/* Stats blok – úderný tmavý s žlutým okrajem */
 .stats-card {
-  background: linear-gradient(135deg, #092727 0%, #0d3535 50%, #092727 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(145deg, #0a1616 0%, #0f2828 40%, #0a1616 100%);
+  border: 3px solid #f5c000;
+  box-shadow: 8px 8px 0 0 rgba(245, 196, 0, 0.25);
 }
 
-/* Tlačítka „Staň se slonem!” – stejné pozadí jako blok Tým/Tréninky/Zápasy/Komunita */
+/* Tlačítka „Staň se slonem!” – výrazná CTA */
 .btn-elephant {
-  background: linear-gradient(135deg, #092727 0%, #0d3535 50%, #092727 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, #0a1616 0%, #132d2d 50%, #0a1616 100%);
+  border: 2px solid #f5c000;
+  box-shadow: 4px 4px 0 0 rgba(245, 196, 0, 0.4);
 }
 .btn-elephant:hover {
-  background: linear-gradient(135deg, #0d3535 0%, #114040 50%, #0d3535 100%);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(145deg, #132d2d 0%, #1a3a3a 50%, #132d2d 100%);
+  border-color: #ffd233;
+  box-shadow: 6px 6px 0 0 rgba(245, 196, 0, 0.5);
+  transform: translate(-1px, -1px);
 }
 
 /* Tlačítka – aktivní stav */
@@ -101,7 +174,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Loader – fullscreen overlay, skrytí po window.load (min. 500–800 ms v main.js) */
+/* Loader – úderný tmavý s akcentem */
 #page-loader {
   position: fixed;
   inset: 0;
@@ -110,18 +183,40 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--loader-bg, #e8c956);
+  background: linear-gradient(165deg, #0a1616 0%, #0d2525 50%, #0a1616 100%);
   transition: opacity 0.3s ease;
 }
-/* Header – stejná žlutá jako pozadí stránky */
-.site-header {
-  background-color: rgba(232, 201, 86, 0.95);
+#page-loader p {
+  color: rgba(255, 255, 255, 0.8);
 }
+/* Header – tmavý, kontrastní */
+.site-header {
+  background: rgba(10, 22, 22, 0.97);
+  border-bottom: 3px solid #f5c000;
+}
+.site-header .text-primary-900 { color: #fff !important; }
+.site-header .text-primary-800 { color: rgba(255,255,255,0.95) !important; }
+.site-header .text-primary-700 { color: rgba(255,255,255,0.85) !important; }
+.site-header .text-primary-600 { color: rgba(255,255,255,0.7) !important; }
+.site-header a:hover { color: #f5c000 !important; }
+.site-header .btn-elephant { color: #0a1616 !important; background: #f5c000 !important; border-color: #f5c000 !important; }
+.site-header .btn-elephant:hover { background: #ffd233 !important; border-color: #ffd233 !important; color: #0a1616 !important; }
+.site-header .border-primary-200 { border-color: rgba(255,255,255,0.1) !important; }
+.site-header .bg-primary-100\/80:hover { background: rgba(245,196,0,0.2) !important; }
+.site-header img.rounded-full { border: 2px solid rgba(245,196,0,0.5); }
 
 #page-loader.loader-fade-out {
   opacity: 0;
   pointer-events: none;
 }
+
+/* Footer – ladí s pozadím sloní kůže */
+footer {
+  background: linear-gradient(180deg, rgba(10, 22, 22, 0.95) 0%, rgba(10, 18, 18, 0.98) 100%) !important;
+}
+footer .text-primary-400 { color: rgba(255, 255, 255, 0.5) !important; }
+footer .text-primary-300 { color: rgba(255, 255, 255, 0.7) !important; }
+footer a:hover { color: #f5c000 !important; }
 /* Loader – helma: lehký odraz + jemné pulzování */
 .loader-football-wrap {
   animation: loader-bounce 0.8s ease-in-out infinite;
@@ -138,21 +233,82 @@
   50% { transform: translateY(-8px); }
 }
 
-/* Barvy doplní klient (tailwind.config.js / CSS variables) */
 .gradient-mesh {
-  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(9, 39, 39, 0.06), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(237, 209, 79, 0.08), transparent);
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(10, 22, 22, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(245, 196, 0, 0.06), transparent);
 }
 
+/* Hero – údernější overlay a titul */
+.hero-section .hero-title {
+  font-family: 'Bebas Neue', Impact, sans-serif;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.4);
+}
+.hero-section .hero-motto {
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #f5c000 !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.hero-section .bg-primary-900\/45 {
+  background: linear-gradient(180deg, rgba(10, 22, 22, 0.75) 0%, rgba(10, 22, 22, 0.5) 50%, rgba(10, 22, 22, 0.85) 100%) !important;
+}
+/* Hero CTA – žlutý primární knoflík */
+.hero-section .btn-cta.btn-elephant {
+  background: #f5c000 !important;
+  border-color: #f5c000 !important;
+  color: #0a1616 !important;
+  box-shadow: 4px 4px 0 0 rgba(0,0,0,0.3) !important;
+}
+.hero-section .btn-cta.btn-elephant:hover {
+  background: #ffd233 !important;
+  border-color: #ffd233 !important;
+  color: #0a1616 !important;
+  box-shadow: 6px 6px 0 0 rgba(0,0,0,0.35) !important;
+}
+
+/* Karty příspěvků (blog preview) – tmavý tile na pozadí */
 .card-hover {
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25) !important;
 }
+.card-hover .text-primary-500 { color: rgba(255, 255, 255, 0.6) !important; }
+.card-hover .text-primary-900 { color: #fff !important; }
+.card-hover .text-primary-600 { color: rgba(255, 255, 255, 0.8) !important; }
 @media (hover: hover) {
   .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 32px -12px rgba(9, 39, 39, 0.18);
-    border-color: rgba(9, 39, 39, 0.12);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(245, 196, 0, 0.3);
+    border-color: rgba(245, 196, 0, 0.45);
   }
+}
+.card-hover:hover .text-primary-600 { color: rgba(255, 255, 255, 0.95) !important; }
+
+/* Horní okraj úvodního videa – plynulý přechod do ztracena */
+.hero-section::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, #0a0e0c 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+/* Spodní okraj úvodního videa – plynulý přechod + žlutá lišta jako u headeru */
+.hero-section::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 80px;
+  background: linear-gradient(to top, #f5c000 0%, #f5c000 3px, #0a0e0c 3px, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .hero-bg-animation {
@@ -166,8 +322,8 @@
   position: absolute;
   inset: -50%;
   background-size: 60px 60px;
-  background-image: linear-gradient(var(--hero-grid, rgba(9, 39, 39, 0.04)) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hero-grid, rgba(9, 39, 39, 0.04)) 1px, transparent 1px);
+  background-image: linear-gradient(var(--hero-grid, rgba(245, 196, 0, 0.06)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hero-grid, rgba(245, 196, 0, 0.06)) 1px, transparent 1px);
   animation: grid-drift 25s linear infinite;
 }
 .hero-grid:nth-child(2) {
@@ -182,10 +338,10 @@
 
 .hero-dots .hero-dot {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--hero-dot, rgba(9, 39, 39, 0.15));
+  background: var(--hero-dot, rgba(245, 196, 0, 0.4));
   animation: dot-float 20s ease-in-out infinite;
 }
 @keyframes dot-float {
