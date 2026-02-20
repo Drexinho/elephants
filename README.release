@@ -1,0 +1,8 @@
+# Kroměříž Elephants – produkční release
+
+Na serveru:
+1. `cp .env.example .env` a doplňte `DB_PASSWORD`, `ADMIN_PASSWORD`
+2. `npm install --production`
+3. `node server.js` (nebo `PORT=8080 node server.js`)
+
+Složka `uploads/` se vytvoří při prvním nahrání obrázku v adminu.
