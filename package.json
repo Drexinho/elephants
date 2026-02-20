@@ -1,4 +1,4 @@
-{"name":"elephants","private":true,"version":"1.0.0","type":"module","scripts":{"dev":"vite","build":"vite build","preview":"vite preview","start":"node server.js"},"dependencies": {
+{"name":"elephants","private":true,"version":"1.0.0","type":"module","scripts":{"dev":"vite","build":"vite build","preview":"vite preview","start":"node server.js","release":"bash scripts/publish-release.sh"},"dependencies": {
     "dotenv": "^16.4.5",
     "multiparty": "^4.2.3",
     "mysql2": "^3.11.0"
