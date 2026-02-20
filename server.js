@@ -1,18 +1,47 @@
+import 'dotenv/config'
+
 /**
  * Produkční server pro nasazení na server.
- * Slouží statické soubory z dist/ a API pro blog (data/posts.json) a nahrávání obrázků.
+ * Slouží statické soubory z dist/ a API pro blog (MariaDB).
  *
  * Spuštění:
  *   npm run build
- *   node server.js
+ *   DB_PASSWORD=xxx node server.js
  *
  * Nebo s portem: PORT=8080 node server.js
+ * DB: DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME (výchozí 10.50.0.5, elephants, elephants)
  */
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import http from 'node:http'
+import multiparty from 'multiparty'
+import * as db from './db.js'
+import {
+  ADMIN_USER,
+  ADMIN_PASSWORD,
+  SESSION_COOKIE,
+  signSession,
+  getSessionUser,
+  createSessionPayload,
+  SESSION_MAX_AGE_SEC,
+} from './auth.js'
+import {
+  getClientIp,
+  getBlockStatus,
+  recordFailedLogin,
+  recordSuccess,
+} from './login-limiter.js'
+
+function requireAuth(req, res, onOk) {
+  const user = getSessionUser(req)
+  if (!user) {
+    sendJson(res, 401, { error: 'Přihlášení vypršelo. Přihlaste se znovu.' })
+    return
+  }
+  onOk(user)
+}
 
 /** Slouží soubor s podporou Range (206) – nutné pro přehrávání videa na mobilu */
 function serveFileWithRange(req, res, filePath, contentType) {
@@ -50,8 +79,8 @@ function serveFileWithRange(req, res, filePath, contentType) {
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIST_DIR = path.join(__dirname, 'dist')
 const PUBLIC_VIDEOS_DIR = path.join(__dirname, 'public', 'videos')
-const POSTS_FILE = path.join(__dirname, 'data', 'posts.json')
-const IMAGES_DIR = path.join(__dirname, 'dist', 'images')
+const UPLOADS_DIR = path.join(__dirname, 'uploads')
+const MAX_UPLOAD_SIZE = 10 * 1024 * 1024 // 10 MB
 const PORT = Number(process.env.PORT) || 5175
 
 const MIME = {
@@ -90,34 +119,157 @@ const server = http.createServer(async (req, res) => {
   const pathname = url.pathname.replace(/\/$/, '') || '/'
   const pathnameNorm = pathname === '/' ? '/index.html' : pathname
 
-  // GET /api/posts
+  // GET /api/posts – veřejné (blog načítá články)
   if (pathname === '/api/posts' && req.method === 'GET') {
     try {
-      const raw = fs.existsSync(POSTS_FILE) ? fs.readFileSync(POSTS_FILE, 'utf8') : '[]'
-      const data = JSON.parse(raw)
-      const list = Array.isArray(data) ? data : []
+      const list = await db.getPosts()
       sendJson(res, 200, list)
-    } catch (_) {
-      sendJson(res, 500, { error: 'Chyba při čtení článků.' })
+    } catch (err) {
+      console.error('GET /api/posts:', err.message)
+      sendJson(res, 500, { error: 'Chyba při čtení článků z databáze.' })
     }
     return
   }
 
-  // POST /api/posts
-  if (pathname === '/api/posts' && req.method === 'POST') {
+  // POST /api/login – přihlášení do administrace (heslo jen na serveru v .env) + brute-force ochrana
+  if (pathname === '/api/login' && req.method === 'POST') {
+    const ip = getClientIp(req)
+    const { blocked, retryAfterSec } = getBlockStatus(ip)
+    if (blocked) {
+      res.writeHead(429, {
+        'Content-Type': 'application/json',
+        'Retry-After': String(retryAfterSec || 900),
+      })
+      res.end(JSON.stringify({ error: 'Příliš mnoho neúspěšných pokusů. Zkuste to znovu později.' }))
+      return
+    }
     try {
       const body = await parseBody(req)
-      const list = JSON.parse(body)
-      if (!Array.isArray(list)) {
-        sendJson(res, 400, { error: 'Očekává se pole článků.' })
+      const { user, password } = JSON.parse(body || '{}')
+      if (String(user).trim() !== ADMIN_USER || password !== ADMIN_PASSWORD) {
+        recordFailedLogin(ip)
+        sendJson(res, 401, { error: 'Nesprávné přihlašovací údaje.' })
         return
       }
-      fs.mkdirSync(path.dirname(POSTS_FILE), { recursive: true })
-      fs.writeFileSync(POSTS_FILE, JSON.stringify(list, null, 2), 'utf8')
-      sendJson(res, 200, { ok: true })
+      recordSuccess(ip)
+      const payload = createSessionPayload(String(user).trim())
+      const token = signSession(payload)
+      res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE_SEC}`)
+      sendJson(res, 200, { ok: true, user: payload.user })
     } catch (_) {
       sendJson(res, 400, { error: 'Neplatná data.' })
     }
+    return
+  }
+
+  // GET /api/me – zda je uživatel přihlášen (pro admin stránku)
+  if (pathname === '/api/me' && req.method === 'GET') {
+    const user = getSessionUser(req)
+    if (!user) {
+      sendJson(res, 401, { error: 'Nejste přihlášen.' })
+      return
+    }
+    sendJson(res, 200, { user })
+    return
+  }
+
+  // POST /api/logout
+  if (pathname === '/api/logout' && req.method === 'POST') {
+    res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`)
+    sendJson(res, 200, { ok: true })
+    return
+  }
+
+  // POST /api/posts – jen pro přihlášené
+  if (pathname === '/api/posts' && req.method === 'POST') {
+    requireAuth(req, res, async () => {
+      try {
+        const body = await parseBody(req)
+        const list = JSON.parse(body)
+        if (!Array.isArray(list)) {
+          sendJson(res, 400, { error: 'Očekává se pole článků.' })
+          return
+        }
+        await db.savePosts(list)
+        sendJson(res, 200, { ok: true })
+      } catch (err) {
+        console.error('POST /api/posts:', err.message)
+        if (err.message === 'Očekává se pole článků.') {
+          sendJson(res, 400, { error: err.message })
+        } else {
+          sendJson(res, 500, { error: 'Chyba při ukládání článků do databáze.' })
+        }
+      }
+    })
+    return
+  }
+
+  // POST /api/upload – jen pro přihlášené
+  if (pathname === '/api/upload' && req.method === 'POST') {
+    const user = getSessionUser(req)
+    if (!user) {
+      sendJson(res, 401, { error: 'Přihlášení vypršelo. Přihlaste se znovu.' })
+      return
+    }
+    const form = new multiparty.Form({ maxFilesSize: MAX_UPLOAD_SIZE, autoFiles: true })
+    form.parse(req, (err, _fields, files) => {
+      if (err) {
+        const msg = err.message && (err.message.includes('maxFilesSize') || err.message.includes('limit'))
+          ? 'Soubor je příliš velký (max 10 MB).'
+          : 'Chyba při nahrávání.'
+        sendJson(res, 400, { error: msg })
+        return
+      }
+      const fileList = files.file || files.image || files.imageFile
+      if (!fileList?.length || !fileList[0].path) {
+        sendJson(res, 400, { error: 'Žádný soubor' })
+        return
+      }
+      const tmpPath = fileList[0].path
+      const originalFilename = fileList[0].originalFilename || 'image'
+      const ext = (path.extname(originalFilename).toLowerCase() || '.jpg').replace(/[^a-z.]/g, '')
+      if (!['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) {
+        sendJson(res, 400, { error: 'Povolené formáty: JPG, PNG, GIF, WEBP' })
+        return
+      }
+      const name = `blog-${Date.now()}-${Math.random().toString(36).slice(2, 10)}${ext}`
+      const destDir = UPLOADS_DIR
+      const destPath = path.join(destDir, name)
+      try {
+        fs.mkdirSync(destDir, { recursive: true })
+        fs.copyFileSync(tmpPath, destPath)
+        sendJson(res, 200, { url: `/uploads/${name}` })
+      } catch (e) {
+        sendJson(res, 500, { error: 'Chyba při ukládání souboru.' })
+      }
+    })
+    return
+  }
+
+  // Statické obrázky z uploads/ (nahrané k článkům)
+  if (pathname.startsWith('/uploads/')) {
+    const subPath = pathname.slice('/uploads/'.length).replace(/\.\./g, '')
+    if (!subPath) {
+      res.writeHead(404)
+      res.end()
+      return
+    }
+    const filePath = path.join(UPLOADS_DIR, subPath)
+    if (!path.resolve(filePath).startsWith(path.resolve(UPLOADS_DIR))) {
+      res.writeHead(403)
+      res.end()
+      return
+    }
+    fs.readFile(filePath, (err, data) => {
+      if (err || !data) {
+        res.writeHead(404)
+        res.end()
+        return
+      }
+      const ext = path.extname(filePath)
+      res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' })
+      res.end(data)
+    })
     return
   }
 
@@ -160,8 +312,20 @@ const server = http.createServer(async (req, res) => {
   })
 })
 
-server.listen(PORT, () => {
-  console.log(`Elephants server: http://localhost:${PORT}`)
-  console.log(`  Statika: dist/`)
-  console.log(`  Články:  data/posts.json`)
-})
+async function start() {
+  try {
+    await db.initSchema()
+    console.log('Databáze: tabulka posts připravena')
+  } catch (err) {
+    console.error('Chyba inicializace DB:', err.message)
+    console.error('Zkontrolujte DB_HOST, DB_USER, DB_PASSWORD, DB_NAME a že databáze elephants existuje.')
+    process.exit(1)
+  }
+  server.listen(PORT, () => {
+    console.log(`Elephants server: http://localhost:${PORT}`)
+    console.log(`  Statika: dist/`)
+    console.log(`  Články:  MariaDB (elephants.posts)`)
+  })
+}
+
+start()

@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-Otevřete [http://localhost:5175](http://localhost:5175). Stránky: `index.html`, `blog.html`, `admin.html`. Články blogu se načítají a ukládají do souboru `data/posts.json` na serveru.
+Otevřete [http://localhost:5175](http://localhost:5175). Stránky: `index.html`, `blog.html`, `admin.html`. Články blogu se načítají z **MariaDB** (při nevyplněném připojení fallback na `data/posts.json`).
 
 ## Produkční build
 
@@ -31,16 +31,38 @@ Výstup je ve složce `dist/`.
 npm run preview
 ```
 
-## Nasazení na server (produkce)
+## Databáze (MariaDB)
 
-Články blogu se ukládají do souboru **`data/posts.json`** na serveru. Pro produkci je potřeba běžet s Node serverem, který tento soubor čte a zapisuje:
+Blog ukládá články do **MariaDB**. Výchozí připojení: host `10.50.0.5`, databáze a uživatel `elephants`.
+
+1. Na MariaDB vytvořte databázi a uživatele (jako root):
+   ```sql
+   CREATE DATABASE IF NOT EXISTS elephants CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE USER IF NOT EXISTS 'elephants'@'%' IDENTIFIED BY 'vaše_heslo';
+   GRANT ALL PRIVILEGES ON elephants.* TO 'elephants'@'%';
+   FLUSH PRIVILEGES;
+   ```
+2. Zkopírujte `.env.example` na `.env` a doplňte `DB_PASSWORD=vaše_heslo`.
+3. Při startu serveru se automaticky vytvoří tabulka `posts` (pokud neexistuje).
+
+Proměnné prostředí (volitelné): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`. Bez nastaveného `DB_PASSWORD` při vývoji (Vite) se použije fallback na soubor `data/posts.json`.
+
+**Produkce:** Heslo nikdy necommitujte. Na produkčním serveru vytvořte `.env` přímo tam (nebo nastavte env v systemd/Dockeru). Soubor `.env` je v `.gitignore` a nesmí být součástí deploye z repozitáře.
+
+**Admin přihlášení:** Heslo do administrace (psaní článků) je **jen na serveru** v `.env`: `ADMIN_USER` a `ADMIN_PASSWORD`. Do buildu ani do kódu se nedostane – přihlášení probíhá přes API (`/api/login`), server ověří údaje a nastaví session cookie.
+
+**Ochrana proti brute-force:** Po několika neúspěšných pokusech o přihlášení z jedné IP se tato IP dočasně zablokuje (výchozí 5 pokusů, pak 15 minut). Konfigurace v `.env`: `LOGIN_MAX_ATTEMPTS`, `LOGIN_BLOCK_MINUTES`. IP se bere z `X-Forwarded-For` / `X-Real-IP` při proxy.
+
+## Nasazení na server (produkce)
 
 ```bash
 npm run build
-npm start
+DB_PASSWORD=vaše_heslo node server.js
 ```
 
-Server poběží na portu **5175** (nebo `PORT=8080 npm start`). Slouží statické soubory z `dist/` a API `GET/POST /api/posts` pro články. Složka `data/` musí existovat a soubor `data/posts.json` musí být zapisovatelný.
+Nebo s portem: `PORT=8080 DB_PASSWORD=... node server.js`. Pro načtení z `.env` lze použít např. `dotenv` nebo export v shellu.
+
+Server slouží statické soubory z `dist/`, API `GET/POST /api/posts` a `POST /api/upload` pro nahrání obrázků k článkům. Nahrané obrázky se ukládají do složky **`uploads/`** (vytvoří se automaticky) a servírují se na cestě `/uploads/`. Složku `uploads/` nemazat při deployi – obsahuje obrázky z adminu.
 
 ## Struktura projektu
 
@@ -48,8 +70,9 @@ Server poběží na portu **5175** (nebo `PORT=8080 npm start`). Slouží static
 Kroměříž Elephants/
 ├── index.html      # Domů – hero, o klubu, náhled blogu, kontakt
 ├── blog.html       # Seznam článků a zobrazení jednoho článku (#slug)
-├── admin.html      # Admin – přidat / upravit / smazat příspěvky (ukládá do data/posts.json)
-├── server.js       # Produkční server pro nasazení (slouží dist/ + API článků)
+├── admin.html      # Admin – přidat / upravit / smazat příspěvky (ukládá do MariaDB)
+├── server.js       # Produkční server (dist/ + API článků z MariaDB)
+├── db.js           # Připojení k MariaDB a operace s tabulkou posts
 ├── package.json
 ├── vite.config.js
 ├── tailwind.config.js
@@ -78,7 +101,7 @@ Kroměříž Elephants/
 ## Obsah stránek
 
 - **index.html**: Hero s animací, statistiky, O klubu, náhled blogu, kontaktní formulář (mailto).
-- **blog.html**: Příspěvky ze serveru (soubor `data/posts.json`), zobrazení jednoho článku podle hash.
-- **admin.html**: Přihlášení, CRUD příspěvků. Ukládání na server do `data/posts.json`; při vývoji přes Vite, na produkci přes `node server.js`.
+- **blog.html**: Příspěvky z API (MariaDB), zobrazení jednoho článku podle hash.
+- **admin.html**: Přihlášení, CRUD příspěvků. Ukládání do MariaDB; při vývoji přes Vite (s DB nebo fallback na `data/posts.json`), na produkci přes `node server.js`.
 
 Loader se zobrazí na všech stránkách a skryje se po načtení (min. cca 600 ms). Kontaktní formulář používá mailto s e-mailem z `config.js`.

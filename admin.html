@@ -129,13 +129,6 @@
   </footer>
 
   <script type="module">
-    const ADMIN_STORAGE_KEY = 'elephants_admin'
-    const ADMIN_USERNAME_KEY = 'elephants_admin_user'
-    const ADMIN_USERS = {
-      admin: 'KromerizElephants2025',
-      editor: 'KromerizElephants2025',
-    }
-
     const loginScreen = document.getElementById('login-screen')
     const adminContent = document.getElementById('admin-content')
     const loginForm = document.getElementById('login-form')
@@ -143,11 +136,11 @@
     const logoutBtn = document.getElementById('logout-btn')
     const adminUserSpan = document.getElementById('admin-user')
 
-    function showAdmin() {
+    function showAdmin(userName) {
       loginScreen.classList.add('hidden')
       adminContent.classList.remove('hidden')
       logoutBtn.classList.remove('hidden')
-      adminUserSpan.textContent = sessionStorage.getItem(ADMIN_USERNAME_KEY) || 'admin'
+      adminUserSpan.textContent = userName || 'admin'
       adminUserSpan.classList.remove('hidden')
     }
 
@@ -164,31 +157,51 @@
       if (typeof renderPosts === 'function') renderPosts()
     }
 
-    if (sessionStorage.getItem(ADMIN_STORAGE_KEY) === '1') {
-      showAdmin()
-      initAdminPosts()
-    } else {
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/me', { credentials: 'include' })
+        if (res.ok) {
+          const data = await res.json()
+          showAdmin(data.user)
+          await initAdminPosts()
+          return
+        }
+      } catch (_) {}
       showLogin()
     }
+
+    checkAuth()
 
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault()
       const user = document.getElementById('login-user').value.trim()
       const password = document.getElementById('login-password').value
-      if (ADMIN_USERS[user] === password) {
-        sessionStorage.setItem(ADMIN_STORAGE_KEY, '1')
-        sessionStorage.setItem(ADMIN_USERNAME_KEY, user)
-        loginError.classList.add('hidden')
-        showAdmin()
-        await initAdminPosts()
-      } else {
+      loginError.classList.add('hidden')
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user, password }),
+          credentials: 'include',
+        })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok && data.ok) {
+          showAdmin(data.user)
+          await initAdminPosts()
+        } else {
+          loginError.textContent = data.error || (res.status === 429 ? 'Příliš mnoho pokusů. Zkuste to později.' : 'Nesprávné přihlašovací údaje.')
+          loginError.classList.remove('hidden')
+        }
+      } catch (_) {
+        loginError.textContent = 'Nesprávné přihlašovací údaje.'
         loginError.classList.remove('hidden')
       }
     })
 
-    logoutBtn.addEventListener('click', () => {
-      sessionStorage.removeItem(ADMIN_STORAGE_KEY)
-      sessionStorage.removeItem(ADMIN_USERNAME_KEY)
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await fetch('/api/logout', { method: 'POST', credentials: 'include' })
+      } catch (_) {}
       showLogin()
     })
 
@@ -229,10 +242,11 @@
       try {
         const formData = new FormData()
         formData.append('file', file)
-        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+        const res = await fetch('/api/upload', { method: 'POST', body: formData, credentials: 'include' })
         const data = await res.json()
         if (!res.ok) {
-          imageUploadStatus.textContent = data.error || 'Chyba'
+          if (res.status === 401) showLogin()
+          else imageUploadStatus.textContent = data.error || 'Chyba'
           return
         }
         imageInput.value = data.url
@@ -285,7 +299,8 @@
             renderPosts()
             if (postIdInput.value === btn.dataset.id) resetForm()
           } else {
-            alert(result.error || 'Uložení se nezdařilo.')
+            if (result.unauthorized) showLogin()
+            else alert(result.error || 'Uložení se nezdařilo.')
           }
         })
       })
@@ -326,7 +341,8 @@
         renderPosts()
         resetForm()
       } else {
-        alert(result.error || 'Uložení se nezdařilo.')
+        if (result.unauthorized) showLogin()
+        else alert(result.error || 'Uložení se nezdařilo.')
       }
     })
 

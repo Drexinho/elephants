@@ -88,6 +88,7 @@ export async function savePostsToServer(posts) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(posts),
+      credentials: 'include',
     })
     const data = await res.json().catch(() => ({}))
     if (res.ok && data.ok) {
@@ -97,7 +98,7 @@ export async function savePostsToServer(posts) {
       } catch (_) {}
       return { ok: true }
     }
-    return { ok: false, error: data.error || 'Chyba ukládání' }
+    return { ok: false, error: data.error || 'Chyba ukládání', unauthorized: res.status === 401 }
   } catch (_) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(posts))
