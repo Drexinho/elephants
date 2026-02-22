@@ -124,6 +124,12 @@
   border: 3px solid #f5c000;
   box-shadow: 8px 8px 0 0 rgba(245, 196, 0, 0.25);
 }
+@media (max-width: 639px) {
+  .stats-card-mobile {
+    border-width: 2px;
+    box-shadow: 4px 4px 0 0 rgba(245, 196, 0, 0.2);
+  }
+}
 
 /* Tlačítka „Staň se slonem!” – výrazná CTA */
 .btn-elephant {
