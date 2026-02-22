@@ -54,7 +54,7 @@ Proměnné prostředí (volitelné): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWO
 
 ## Nasazení na server (produkce)
 
-Backend je čistě PHP – vhodné pro Apache nebo nginx + PHP-FPM.
+Backend je čistě PHP. Na serveru se předpokládá **Apache s PHP jako modulem (mod_php)**; alternativně nginx + PHP-FPM.
 
 1. Na server zkopírujte celý projekt (nebo použijte větev `release` – viz níže).
 2. Nastavte document root na složku projektu (kde leží `index.php`).
@@ -62,7 +62,65 @@ Backend je čistě PHP – vhodné pro Apache nebo nginx + PHP-FPM.
 4. Vytvořte `.env` z `.env.example` a doplňte hesla.
 5. Složky `uploads/` a `storage/` musí být zapisovatelné pro PHP (např. `chmod 755`, vlastník www-data).
 
-**Apache:** V kořeni projektu je `.htaccess` – směruje vše na `index.php`. Potřebujete `AllowOverride All` a `mod_rewrite`.
+**Apache – PHP jako modul (mod_php):**
+
+Projekt má obsluhovat **PHP jako modul Apache** (mod_php), ne CGI ani PHP-FPM. Požadavky na `.php` pak Apache předá přímo modulu.
+
+1. **DocumentRoot** musí ukazovat na **kořen klonu repa** (tam, kde po `git pull origin release` leží `index.php` a `.htaccess`), ne na podsložku `dist/` ani `public/`.
+2. **AllowOverride** pro ten adresář musí být **All**, jinak se `.htaccess` nečte a rewrite na `index.php` nefunguje – Apache pak servíruje jen soubory a `/api/*` končí 404.
+3. **PHP jako modul:** nainstalujte balíček pro váš PHP (např. `libapache2-mod-php8.2`), zapněte modul a restartujte Apache. Pak Apache sám obsluhuje soubory `.php` přes mod_php.
+
+```bash
+# Debian/Ubuntu – PHP jako modul Apache
+sudo apt install libapache2-mod-php8.2   # nebo php8.1, php8.3 dle verze
+sudo a2enmod rewrite php8.2
+sudo systemctl reload apache2
+```
+
+Příklad vhostu (Debian/Ubuntu, úpravu cesty přizpůsobte):
+
+```apache
+<VirtualHost *:80>
+    ServerName vas-domena.cz
+    DocumentRoot /var/www/elephants
+
+    <Directory /var/www/elephants>
+        AllowOverride All
+        Require all granted
+        DirectoryIndex index.php
+    </Directory>
+</VirtualHost>
+```
+
+S mod_php není ve vhostu potřeba nic dalšího – Apache předá `.php` soubory modulu automaticky. Ověření: na serveru `curl -I https://vas-domena.cz/api/posts` by měl vracet `Content-Type: application/json`, ne 404.
+
+**Apache + PHP-FPM** (místo mod_php):
+
+Pokud chcete, aby PHP obsluhoval **PHP-FPM** a Apache jen proxy předával požadavky na FPM:
+
+1. Nainstalujte PHP-FPM (např. `php8.2-fpm`), ujistěte se, že FPM poslouchá na socketu (výchozí např. `/run/php/php8.2-fpm.sock`).
+2. V Apache zapněte `proxy_fcgi` a `rewrite`: `sudo a2enmod proxy_fcgi rewrite`.
+3. Ve vhostu nastavte `SetHandler` pro `.php` na proxy do FPM (cestu k socketu přizpůsobte verzi PHP):
+
+```apache
+<VirtualHost *:80>
+    ServerName vas-domena.cz
+    DocumentRoot /var/www/elephants
+
+    <Directory /var/www/elephants>
+        AllowOverride All
+        Require all granted
+        DirectoryIndex index.php
+    </Directory>
+
+    # PHP předat PHP-FPM (socket – cesta dle verze: php8.1-fpm.sock, php8.2-fpm.sock, …)
+    <FilesMatch \.php$>
+        SetHandler "proxy:unix:/run/php/php8.2-fpm.sock|fcgi://localhost"
+    </FilesMatch>
+</VirtualHost>
+```
+
+Po změně: `sudo systemctl reload apache2`. Ověření stejné: `curl -I https://vas-domena.cz/api/posts` → `Content-Type: application/json`.
 
 **Nginx** – příklad location:
 
@@ -87,7 +145,7 @@ Statické soubory (JS, CSS, obrázky z `dist/`), `/uploads/` a `/videos/` obsluh
 npm run release
 ```
 
-Stáhne `main`, vybuildí frontend a nahraje do větve `release` (včetně `index.php`, `.htaccess`, `php/`, `dist/`). Na produkčním serveru pak stačí `git pull origin release`.
+Stáhne `main`, vybuildí frontend a nahraje do větve `release` (včetně `index.php`, `.htaccess`, `php/`, `dist/`). Na produkčním serveru pak stačí `git pull origin release`. Pokud Apache po pullu nepoužívá PHP (API nefunguje, 404), zkontrolujte podle sekce „Apache – aby release větev opravdu používala PHP“ výše.
 
 ## Struktura projektu
 
