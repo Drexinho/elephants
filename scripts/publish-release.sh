@@ -21,7 +21,9 @@ cp -r public/videos /tmp/elephants-release-videos 2>/dev/null || true
 
 echo "==> Přepnutí na release a aktualizace souborů..."
 git checkout release
-git checkout main -- server.js db.js auth.js login-limiter.js package.json package-lock.json .env.example 2>/dev/null || true
+git checkout main -- index.php .htaccess .env.example 2>/dev/null || true
+git checkout main -- php/ 2>/dev/null || true
+rm -f server.js db.js auth.js login-limiter.js 2>/dev/null || true
 rm -rf dist
 cp -r /tmp/elephants-release-dist dist
 rm -rf public/videos
@@ -30,12 +32,12 @@ cp -r /tmp/elephants-release-videos public/videos 2>/dev/null || true
 rm -rf /tmp/elephants-release-dist /tmp/elephants-release-videos
 
 echo "==> Commit a push release..."
-git add dist server.js db.js auth.js login-limiter.js package.json package-lock.json .env.example public/videos 2>/dev/null || true
+git add dist index.php .htaccess php .env.example public/videos 2>/dev/null || true
 git add -u
 if git diff --staged --quiet; then
   echo "Žádné změny oproti předchozímu release."
 else
-  git commit -m "Release: aktualizace buildu a serveru"
+  git commit -m "Release: aktualizace buildu a PHP backendu"
   git push origin release
 fi
 
