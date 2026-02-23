@@ -55,30 +55,30 @@
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-white rounded-3xl section-card p-8 md:p-14">
           <div class="max-w-4xl mx-auto">
-      <h1 class="text-3xl font-bold text-primary-900 mb-8">Správa blogu</h1>
+      <h1 class="admin-heading text-3xl mb-8">Správa blogu</h1>
 
       <div class="rounded-2xl bg-primary-50/80 border border-primary-100 p-6 md:p-8 mb-12">
-        <h2 id="form-title" class="text-xl font-bold text-primary-900 mb-6">Nový příspěvek</h2>
+        <h2 id="form-title" class="admin-heading text-xl mb-6">Nový příspěvek</h2>
         <form id="post-form" class="space-y-5">
           <input type="hidden" id="post-id" />
           <div>
-            <label for="title" class="block text-sm font-medium text-primary-700 mb-2">Název *</label>
+            <label for="title" class="admin-label block text-sm mb-2">Název *</label>
             <input type="text" id="title" name="title" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Název článku" />
           </div>
           <div>
-            <label for="date" class="block text-sm font-medium text-primary-700 mb-2">Datum *</label>
+            <label for="date" class="admin-label block text-sm mb-2">Datum *</label>
             <input type="date" id="date" name="date" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500" />
           </div>
           <div>
-            <label for="excerpt" class="block text-sm font-medium text-primary-700 mb-2">Krátký popis (perex) *</label>
+            <label for="excerpt" class="admin-label block text-sm mb-2">Krátký popis (perex) *</label>
             <input type="text" id="excerpt" name="excerpt" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Jedna věta pro náhled v seznamu" />
           </div>
           <div>
-            <label for="body" class="block text-sm font-medium text-primary-700 mb-2">Text článku *</label>
+            <label for="body" class="admin-label block text-sm mb-2">Text článku *</label>
             <textarea id="body" name="body" rows="6" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y" placeholder="Plný text příspěvku..."></textarea>
           </div>
           <div>
-            <label for="image" class="block text-sm font-medium text-primary-700 mb-2">Obrázek k článku</label>
+            <label for="image" class="admin-label block text-sm mb-2">Obrázek k článku</label>
             <div class="flex flex-wrap gap-3 items-start">
               <input type="text" id="image" name="image" class="flex-1 min-w-[200px] px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="URL nebo nahrajte soubor (zobrazí se jen u plného článku)" />
               <div class="flex items-center gap-2">
@@ -101,7 +101,7 @@
         </form>
       </div>
 
-      <h2 class="text-xl font-bold text-primary-900 mb-4">Příspěvky</h2>
+      <h2 class="admin-heading text-xl mb-4">Příspěvky</h2>
       <div id="posts-list" class="space-y-4">
         <!-- Naplní JS -->
       </div>
@@ -265,7 +265,7 @@
       postsList.innerHTML = posts.map(p => `
         <div class="flex items-center justify-between gap-4 rounded-xl border border-primary-200 bg-white p-4 shadow-sm">
           <div class="min-w-0">
-            <p class="font-semibold text-primary-900 truncate">${escapeHtml(p.title)}</p>
+            <p class="admin-heading font-semibold truncate">${escapeHtml(p.title)}</p>
             <p class="text-sm text-primary-500">${new Date(p.date).toLocaleDateString('cs-CZ')}</p>
           </div>
           <div class="flex gap-2 shrink-0">

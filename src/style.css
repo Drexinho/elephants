@@ -180,6 +180,97 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Input a textarea – bílé pozadí a černý text jako výchozí (jako klasický formulář) */
+input:not([type="hidden"]):not([type="file"]),
+textarea {
+  background: #fff !important;
+  color: #000 !important;
+  -webkit-text-fill-color: #000 !important;
+  border: 1px solid #e5e7eb !important;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
+}
+.section-card input:not([type="hidden"]):not([type="file"]),
+.section-card textarea {
+  background: #fff !important;
+  color: #000 !important;
+  border-color: #e5e7eb !important;
+}
+.section-card input::placeholder,
+.section-card textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Jen v administraci – přehled příspěvků a formuláře: bílé karty, tmavý text */
+#admin-content .section-card.bg-white .text-primary-500,
+#admin-content .section-card.bg-white .text-primary-600,
+#admin-content .section-card.bg-white .text-primary-700,
+#admin-content .section-card.bg-white p { color: #374151 !important; }
+#admin-content .section-card .bg-white .text-primary-500,
+#admin-content .section-card .bg-white .text-primary-600,
+#admin-content .section-card .bg-white .text-primary-700 { color: #374151 !important; }
+#admin-content .section-card.bg-white .bg-primary-100 { background: #e5e7eb !important; }
+#admin-content .section-card.bg-white .bg-primary-200 { background: #d1d5db !important; }
+
+/* Tlačítka Upravit / Smazat – vyladěná k bílému pozadí karty */
+#admin-content .section-card.bg-white .edit-post {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0;
+}
+#admin-content .section-card.bg-white .edit-post:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1;
+}
+#admin-content .section-card.bg-white .delete-post {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca;
+}
+#admin-content .section-card.bg-white .delete-post:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5;
+}
+
+/* Nahrát obrázek, Zrušit úpravu – stejně vyladěné k bílému pozadí */
+#admin-content .section-card.bg-white #image-upload-btn {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+#admin-content .section-card.bg-white #image-upload-btn:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+#admin-content .section-card.bg-white #cancel-edit {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0;
+}
+#admin-content .section-card.bg-white #cancel-edit:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1;
+}
+
+/* Nadpisy v administraci – vlastní třída, světlý vzhled (jen admin, nic jiného neovlivní) */
+.admin-heading {
+  color: #475569 !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+#admin-content .section-card .bg-white .admin-heading {
+  color: #475569 !important;
+}
+
+/* Podnadpisy v administraci (Název, Datum, Krátký popis, …) – světlé, jen admin */
+.admin-label,
+#admin-content .section-card.bg-white .admin-label {
+  color: #cbd5e1 !important;
+  font-weight: 600;
+}
+
 /* Loader – úderný tmavý s akcentem */
 #page-loader {
   position: fixed;
