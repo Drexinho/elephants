@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin – Blog | Kroměříž Elephants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <script type="module" crossorigin src="./assets/admin-DBsTRc-Q.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/posts-DCaU777W.js">
+  <link rel="stylesheet" crossorigin href="./assets/posts-Ca0Kocfa.css">
+</head>
+<body class="font-sans antialiased text-primary-900 min-h-screen">
+  <div id="page-loader" class="loader" role="status" aria-live="polite" aria-label="Načítání stránky">
+    <div class="loader-football-wrap">
+      <img src="./images/loader.png" alt="" class="loader-football w-[400px] h-[400px] object-contain" width="400" height="400" />
+    </div>
+    <p class="mt-4 text-sm text-primary-600">Načítám…</p>
+  </div>
+
+  <header class="site-header fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-primary-800/20">
+    <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between h-16 md:h-20">
+      <a href="index.html" class="text-xl font-bold tracking-tight text-primary-900">Kroměříž Elephants<span class="text-primary-700">.</span> <span class="text-accent-400">Admin</span></a>
+      <div class="flex items-center gap-4">
+        <span id="admin-user" class="text-primary-600 text-sm hidden">admin</span>
+        <button type="button" id="logout-btn" class="hidden text-primary-700 hover:text-primary-900 text-sm transition">Odhlásit</button>
+        <a href="blog.html" class="text-primary-700 hover:text-primary-900 text-sm transition">Zobrazit blog</a>
+        <a href="index.html" class="text-primary-700 hover:text-primary-900 text-sm transition">Na web</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Přihlášení -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center pt-20 px-6">
+    <div class="w-full max-w-sm rounded-3xl bg-white section-card border border-primary-100 p-8">
+      <h2 class="text-xl font-bold text-primary-900 mb-6">Přihlášení do administrace</h2>
+      <form id="login-form" class="space-y-5">
+        <p id="login-error" class="text-red-600 text-sm hidden">Nesprávné přihlašovací údaje.</p>
+        <div>
+          <label for="login-user" class="block text-sm font-medium text-primary-700 mb-2">Přihlašovací jméno</label>
+          <input type="text" id="login-user" name="user" required autocomplete="username" class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="admin" />
+        </div>
+        <div>
+          <label for="login-password" class="block text-sm font-medium text-primary-700 mb-2">Heslo</label>
+          <input type="password" id="login-password" name="password" required autocomplete="current-password" class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="••••••••" />
+        </div>
+        <button type="submit" class="w-full py-3 btn-elephant text-white font-semibold rounded-xl transition">
+          Přihlásit
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Obsah po přihlášení -->
+  <main id="admin-content" class="pt-28 pb-16 md:pb-20 hidden">
+    <section class="py-8 md:py-12">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-3xl section-card p-8 md:p-14">
+          <div class="max-w-4xl mx-auto">
+      <h1 class="text-3xl font-bold text-primary-900 mb-8">Správa blogu</h1>
+
+      <div class="rounded-2xl bg-primary-50/80 border border-primary-100 p-6 md:p-8 mb-12">
+        <h2 id="form-title" class="text-xl font-bold text-primary-900 mb-6">Nový příspěvek</h2>
+        <form id="post-form" class="space-y-5">
+          <input type="hidden" id="post-id" />
+          <div>
+            <label for="title" class="block text-sm font-medium text-primary-700 mb-2">Název *</label>
+            <input type="text" id="title" name="title" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Název článku" />
+          </div>
+          <div>
+            <label for="date" class="block text-sm font-medium text-primary-700 mb-2">Datum *</label>
+            <input type="date" id="date" name="date" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          </div>
+          <div>
+            <label for="excerpt" class="block text-sm font-medium text-primary-700 mb-2">Krátký popis (perex) *</label>
+            <input type="text" id="excerpt" name="excerpt" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Jedna věta pro náhled v seznamu" />
+          </div>
+          <div>
+            <label for="body" class="block text-sm font-medium text-primary-700 mb-2">Text článku *</label>
+            <textarea id="body" name="body" rows="6" required class="w-full px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y" placeholder="Plný text příspěvku..."></textarea>
+          </div>
+          <div>
+            <label for="image" class="block text-sm font-medium text-primary-700 mb-2">Obrázek k článku</label>
+            <div class="flex flex-wrap gap-3 items-start">
+              <input type="text" id="image" name="image" class="flex-1 min-w-[200px] px-4 py-3 rounded-xl bg-white border border-primary-200 text-primary-900 placeholder-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="URL nebo nahrajte soubor (zobrazí se jen u plného článku)" />
+              <div class="flex items-center gap-2">
+                <input type="file" id="image-upload" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" />
+                <button type="button" id="image-upload-btn" class="px-4 py-3 bg-primary-100 hover:bg-primary-200 text-primary-800 font-medium rounded-xl transition border border-primary-200">
+                  Nahrát obrázek
+                </button>
+                <span id="image-upload-status" class="text-sm text-primary-500 hidden"></span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button type="submit" class="px-6 py-3 bg-primary-700 hover:bg-primary-800 text-white font-semibold rounded-xl transition">
+              Uložit
+            </button>
+            <button type="button" id="cancel-edit" class="hidden px-6 py-3 bg-primary-200 hover:bg-primary-300 text-primary-800 font-semibold rounded-xl transition">
+              Zrušit úpravu
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <h2 class="text-xl font-bold text-primary-900 mb-4">Příspěvky</h2>
+      <div id="posts-list" class="space-y-4">
+        <!-- Naplní JS -->
+      </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-primary-900 text-primary-200 py-6 md:py-8 border-t-4 border-accent-500">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="text-center md:text-left">
+          <p class="font-bold text-white text-sm">Kroměříž Elephants</p>
+          <p class="text-primary-300 font-medium text-xs mt-0.5">Síla, Respekt, Vítězství</p>
+          <p class="text-primary-400 text-xs mt-0.5">Klub amerického fotbalu</p>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <a href="blog.html" class="text-primary-200 hover:text-white text-xs transition">Blog</a>
+          <a href="index.html" class="text-primary-200 hover:text-white text-xs transition">Na web</a>
+        </div>
+        <p class="text-primary-400 text-xs">© 2025 Kroměříž Elephants. Všechna práva vyhrazena.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

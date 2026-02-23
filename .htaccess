@@ -1,0 +1,9 @@
+# Elephants – vše směrovat na index.php (API + statika z dist/)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    # Skutečné soubory a složky nechat na Apache (volitelné – pokud chcete, aby Apache přímo servíroval dist/, odkomentujte a upravte)
+    # RewriteCond %{REQUEST_FILENAME} -f
+    # RewriteRule ^ - [L]
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
