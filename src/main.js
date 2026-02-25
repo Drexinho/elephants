@@ -34,6 +34,10 @@ function applyContactConfig() {
   document.querySelectorAll('[data-contact="instagram"]').forEach((el) => {
     el.setAttribute('href', SOCIAL_INSTAGRAM_URL)
   })
+  document.querySelectorAll('[data-contact="whatsapp"]').forEach((el) => {
+    const phoneClean = CONTACT_PHONE.replace(/\D/g, '')
+    el.setAttribute('href', `https://wa.me/${phoneClean}`)
+  })
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -116,7 +116,7 @@
 .section-card input,
 .section-card textarea { background: rgba(255, 255, 255, 0.95) !important; color: #0a1616 !important; border-color: rgba(255, 255, 255, 0.35) !important; }
 .section-card input::placeholder,
-.section-card textarea::placeholder { color: #6b6358; }
+.section-card textarea::placeholder { color: #d1d5db !important; }
 
 /* Stats blok – úderný tmavý s žlutým okrajem */
 .stats-card {
@@ -190,7 +190,7 @@ textarea {
 }
 input::placeholder,
 textarea::placeholder {
-  color: #9ca3af;
+  color: #d1d5db !important;
 }
 .section-card input:not([type="hidden"]):not([type="file"]),
 .section-card textarea {
@@ -200,7 +200,7 @@ textarea::placeholder {
 }
 .section-card input::placeholder,
 .section-card textarea::placeholder {
-  color: #9ca3af;
+  color: #d1d5db !important;
 }
 
 /* Jen v administraci – přehled příspěvků a formuláře: bílé karty, tmavý text */
