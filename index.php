@@ -211,7 +211,21 @@ $distPages = [
     '/blog.html' => 'blog.html',
     '/admin' => 'admin.html',
     '/admin.html' => 'admin.html',
+    '/podpor' => 'podpor.html',
+    '/podpor.html' => 'podpor.html',
 ];
+
+// Přesměrování .html URL na hezké URL (bez .html)
+$redirectMap = [
+    '/index.html' => '/',
+    '/blog.html' => '/blog',
+    '/admin.html' => '/admin',
+    '/podpor.html' => '/podpor',
+];
+if (isset($redirectMap[$path])) {
+    header('Location: ' . $redirectMap[$path], true, 301);
+    exit;
+}
 $distFile = null;
 if (isset($distPages[$path])) {
     $distFile = $DIST_DIR . '/' . $distPages[$path];
