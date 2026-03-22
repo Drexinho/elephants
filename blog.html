@@ -146,17 +146,10 @@
       return p
     }
 
-    function goToBlogPage(n) {
-      const posts = getPosts().sort((a, b) => new Date(b.date) - new Date(a.date))
-      const totalPages = Math.max(1, Math.ceil(posts.length / PAGE_SIZE))
-      const page = Math.min(Math.max(1, n), totalPages)
-      const url = new URL(window.location.href)
-      url.hash = ''
-      if (page <= 1) url.searchParams.delete('page')
-      else url.searchParams.set('page', String(page))
-      history.pushState({}, '', url)
-      renderList()
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+    /** URL seznamu blogu pro danou stránku (bez JS navigace) */
+    function blogPageHref(pageNum) {
+      if (pageNum <= 1) return '/blog'
+      return `/blog?page=${pageNum}`
     }
 
     function renderList() {
@@ -192,23 +185,22 @@
         paginationEl.classList.remove('hidden')
         const prevDisabled = page <= 1
         const nextDisabled = page >= totalPages
-        const prevBtn = `<button type="button" data-blog-page="${page - 1}" ${prevDisabled ? 'disabled' : ''} class="px-4 py-2 rounded-lg font-medium transition ${prevDisabled ? 'text-primary-300 cursor-not-allowed' : 'text-primary-700 hover:bg-primary-100'}">← Předchozí</button>`
-        const nextBtn = `<button type="button" data-blog-page="${page + 1}" ${nextDisabled ? 'disabled' : ''} class="px-4 py-2 rounded-lg font-medium transition ${nextDisabled ? 'text-primary-300 cursor-not-allowed' : 'text-primary-700 hover:bg-primary-100'}">Další →</button>`
+        const prevNav = prevDisabled
+          ? `<span class="text-primary-300 cursor-default select-none">← Předchozí</span>`
+          : `<a href="${blogPageHref(page - 1)}" class="text-primary-700 hover:text-primary-900 hover:underline underline-offset-2">← Předchozí</a>`
+        const nextNav = nextDisabled
+          ? `<span class="text-primary-300 cursor-default select-none">Další →</span>`
+          : `<a href="${blogPageHref(page + 1)}" class="text-primary-700 hover:text-primary-900 hover:underline underline-offset-2">Další →</a>`
         let nums = ''
         for (let i = 1; i <= totalPages; i++) {
           const active = i === page
-          nums += `<button type="button" data-blog-page="${i}" class="min-w-[2.25rem] px-2 py-2 rounded-lg font-medium transition ${active ? 'bg-primary-900 text-white' : 'text-primary-700 hover:bg-primary-100'}" ${active ? 'disabled aria-current="page"' : ''}>${i}</button>`
+          nums += active
+            ? `<span class="min-w-[2rem] inline-flex justify-center font-semibold text-primary-900" aria-current="page">${i}</span>`
+            : `<a href="${blogPageHref(i)}" class="min-w-[2rem] inline-flex justify-center text-primary-700 hover:text-primary-900 hover:underline underline-offset-2">${i}</a>`
         }
-        paginationEl.innerHTML = `<div class="flex flex-wrap items-center justify-center gap-2">${prevBtn}<span class="text-primary-500 px-2 hidden sm:inline">Stránka ${page} z ${totalPages}</span>${nums}${nextBtn}</div>`
+        paginationEl.innerHTML = `<div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">${prevNav}<span class="text-primary-500 px-2 hidden sm:inline">Stránka ${page} z ${totalPages}</span><span class="inline-flex items-center gap-2 sm:gap-3">${nums}</span>${nextNav}</div>`
       }
     }
-
-    paginationEl.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-blog-page]')
-      if (!btn || btn.disabled) return
-      const n = parseInt(btn.getAttribute('data-blog-page'), 10)
-      if (!Number.isNaN(n)) goToBlogPage(n)
-    })
 
     function renderSingle(post) {
       const imageHtml = post.image
