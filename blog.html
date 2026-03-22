@@ -65,6 +65,8 @@
               <!-- Naplní JS -->
             </div>
 
+            <nav id="blog-pagination" class="mt-10 pt-8 border-t border-primary-100 hidden flex flex-wrap justify-center items-center gap-3 text-sm" aria-label="Stránkování článků"></nav>
+
             <div id="blog-single" class="hidden">
               <a href="/blog" class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-800 font-semibold mb-8 transition">← Zpět na blog</a>
               <article id="blog-single-content"></article>
@@ -107,19 +109,73 @@
       return div.innerHTML
     }
 
+    /** Bezpečně: escapuje text a z plain URL udělá klikatelné odkazy */
+    function linkifyPlainText(text) {
+      if (!text) return ''
+      const re = /(https?:\/\/[^\s<]+)/g
+      let out = ''
+      let lastIndex = 0
+      let m
+      while ((m = re.exec(text)) !== null) {
+        out += escapeHtml(text.slice(lastIndex, m.index))
+        let rawUrl = m[1]
+        let trailing = ''
+        while (rawUrl.length > 0 && /[.,;:!?)\]}»"'”]$/.test(rawUrl.slice(-1))) {
+          trailing = rawUrl.slice(-1) + trailing
+          rawUrl = rawUrl.slice(0, -1)
+        }
+        const href = escapeHtml(rawUrl)
+        const label = escapeHtml(rawUrl)
+        out += `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline break-words">${label}</a>`
+        out += escapeHtml(trailing)
+        lastIndex = m.index + m[1].length
+      }
+      out += escapeHtml(text.slice(lastIndex))
+      return out
+    }
+
+    const PAGE_SIZE = 10
     const listEl = document.getElementById('blog-list')
+    const paginationEl = document.getElementById('blog-pagination')
     const singleWrap = document.getElementById('blog-single')
     const singleContent = document.getElementById('blog-single-content')
 
+    function getCurrentPage() {
+      const p = parseInt(new URLSearchParams(window.location.search).get('page') || '1', 10)
+      if (Number.isNaN(p) || p < 1) return 1
+      return p
+    }
+
+    function goToBlogPage(n) {
+      const posts = getPosts().sort((a, b) => new Date(b.date) - new Date(a.date))
+      const totalPages = Math.max(1, Math.ceil(posts.length / PAGE_SIZE))
+      const page = Math.min(Math.max(1, n), totalPages)
+      const url = new URL(window.location.href)
+      url.hash = ''
+      if (page <= 1) url.searchParams.delete('page')
+      else url.searchParams.set('page', String(page))
+      history.pushState({}, '', url)
+      renderList()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
     function renderList() {
       const posts = getPosts().sort((a, b) => new Date(b.date) - new Date(a.date))
-      listEl.innerHTML = posts.map(p => {
+      const total = posts.length
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+      let page = getCurrentPage()
+      if (page > totalPages) page = totalPages
+      const start = (page - 1) * PAGE_SIZE
+      const pagePosts = posts.slice(start, start + PAGE_SIZE)
+
+      listEl.innerHTML = pagePosts.map(p => {
         const thumb = p.image
           ? `<img src="${escapeHtml(p.image)}" alt="" class="w-full aspect-video object-cover rounded-xl" loading="lazy" />`
           : ''
+        const pageParam = page > 1 ? `?page=${page}` : ''
         return `
         <article class="border-b border-primary-100 pb-8 last:border-0 last:pb-0">
-          <a href="blog.html#${p.slug}" class="group block py-2">
+          <a href="/blog${pageParam}#${p.slug}" class="group block py-2">
             ${thumb ? `<div class="mb-4 overflow-hidden rounded-xl">${thumb}</div>` : ''}
             <p class="text-sm text-primary-500">${new Date(p.date).toLocaleDateString('cs-CZ')}</p>
             <h2 class="mt-2 text-xl font-bold text-primary-900 group-hover:text-primary-700 transition">${escapeHtml(p.title)}</h2>
@@ -128,7 +184,31 @@
         </article>
       `
       }).join('')
+
+      if (totalPages <= 1) {
+        paginationEl.innerHTML = ''
+        paginationEl.classList.add('hidden')
+      } else {
+        paginationEl.classList.remove('hidden')
+        const prevDisabled = page <= 1
+        const nextDisabled = page >= totalPages
+        const prevBtn = `<button type="button" data-blog-page="${page - 1}" ${prevDisabled ? 'disabled' : ''} class="px-4 py-2 rounded-lg font-medium transition ${prevDisabled ? 'text-primary-300 cursor-not-allowed' : 'text-primary-700 hover:bg-primary-100'}">← Předchozí</button>`
+        const nextBtn = `<button type="button" data-blog-page="${page + 1}" ${nextDisabled ? 'disabled' : ''} class="px-4 py-2 rounded-lg font-medium transition ${nextDisabled ? 'text-primary-300 cursor-not-allowed' : 'text-primary-700 hover:bg-primary-100'}">Další →</button>`
+        let nums = ''
+        for (let i = 1; i <= totalPages; i++) {
+          const active = i === page
+          nums += `<button type="button" data-blog-page="${i}" class="min-w-[2.25rem] px-2 py-2 rounded-lg font-medium transition ${active ? 'bg-primary-900 text-white' : 'text-primary-700 hover:bg-primary-100'}" ${active ? 'disabled aria-current="page"' : ''}>${i}</button>`
+        }
+        paginationEl.innerHTML = `<div class="flex flex-wrap items-center justify-center gap-2">${prevBtn}<span class="text-primary-500 px-2 hidden sm:inline">Stránka ${page} z ${totalPages}</span>${nums}${nextBtn}</div>`
+      }
     }
+
+    paginationEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-blog-page]')
+      if (!btn || btn.disabled) return
+      const n = parseInt(btn.getAttribute('data-blog-page'), 10)
+      if (!Number.isNaN(n)) goToBlogPage(n)
+    })
 
     function renderSingle(post) {
       const imageHtml = post.image
@@ -137,39 +217,44 @@
       singleContent.innerHTML = `
         <p class="text-sm text-primary-500">${new Date(post.date).toLocaleDateString('cs-CZ')}</p>
         <h2 class="mt-2 text-3xl font-bold text-primary-900">${escapeHtml(post.title)}</h2>
-        <div class="mt-6 text-primary-600 whitespace-pre-wrap">${escapeHtml(post.body)}</div>
+        <div class="mt-6 text-primary-600 whitespace-pre-wrap">${linkifyPlainText(post.body)}</div>
         ${imageHtml}
       `
       listEl.classList.add('hidden')
+      paginationEl.classList.add('hidden')
       singleWrap.classList.remove('hidden')
     }
 
     function showList() {
       singleWrap.classList.add('hidden')
       listEl.classList.remove('hidden')
+      paginationEl.classList.remove('hidden')
       renderList()
+    }
+
+    function syncViewFromUrl() {
+      const hash = window.location.hash.slice(1)
+      if (hash) {
+        const post = getPostBySlug(hash)
+        if (post) {
+          renderSingle(post)
+          return
+        }
+      }
+      showList()
     }
 
     ;(async () => {
       await loadPostsFromServer()
-      const hash = window.location.hash.slice(1)
-      if (hash) {
-        const post = getPostBySlug(hash)
-        if (post) renderSingle(post)
-        else showList()
-      } else {
-        showList()
-      }
+      syncViewFromUrl()
     })()
 
     window.addEventListener('hashchange', () => {
-      const h = window.location.hash.slice(1)
-      if (!h) showList()
-      else {
-        const post = getPostBySlug(h)
-        if (post) renderSingle(post)
-        else showList()
-      }
+      syncViewFromUrl()
+    })
+
+    window.addEventListener('popstate', () => {
+      syncViewFromUrl()
     })
   </script>
 </body>

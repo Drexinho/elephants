@@ -116,7 +116,18 @@
 .section-card input,
 .section-card textarea { background: rgba(255, 255, 255, 0.95) !important; color: #0a1616 !important; border-color: rgba(255, 255, 255, 0.35) !important; }
 .section-card input::placeholder,
-.section-card textarea::placeholder { color: #d1d5db !important; }
+.section-card textarea::placeholder,
+.section-card input::-webkit-input-placeholder,
+.section-card textarea::-webkit-input-placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+  opacity: 1;
+}
+.section-card input::-moz-placeholder,
+.section-card textarea::-moz-placeholder {
+  color: #9ca3af !important;
+  opacity: 1;
+}
 
 /* Stats blok – úderný tmavý s žlutým okrajem */
 .stats-card {
@@ -203,19 +214,31 @@ textarea {
   -webkit-text-fill-color: #000 !important;
   border: 1px solid #e5e7eb !important;
 }
+/* Placeholder – světle šedý, odlišný od psaného textu ve všech prohlížečích */
 input::placeholder,
-textarea::placeholder {
-  color: #d1d5db !important;
+textarea::placeholder,
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder,
+.section-card input::placeholder,
+.section-card textarea::placeholder,
+.section-card input::-webkit-input-placeholder,
+.section-card textarea::-webkit-input-placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+  opacity: 1;
+}
+input::-moz-placeholder,
+textarea::-moz-placeholder,
+.section-card input::-moz-placeholder,
+.section-card textarea::-moz-placeholder {
+  color: #9ca3af !important;
+  opacity: 1;
 }
 .section-card input:not([type="hidden"]):not([type="file"]),
 .section-card textarea {
   background: #fff !important;
   color: #000 !important;
   border-color: #e5e7eb !important;
-}
-.section-card input::placeholder,
-.section-card textarea::placeholder {
-  color: #d1d5db !important;
 }
 
 /* Jen v administraci – přehled příspěvků a formuláře: bílé karty, tmavý text */
